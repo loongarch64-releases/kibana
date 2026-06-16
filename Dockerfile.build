@@ -1,0 +1,12 @@
+ARG FLAVOR=${TARGETARCH}
+
+ARG ROCMVERSION=6.1.2
+ARG JETPACK5VERSION=r35.4.1
+ARG JETPACK6VERSION=r36.2.0
+ARG CMAKEVERSION=3.31.2
+
+FROM lcr.loongnix.cn/openanolis/anolisos:23.1 AS base
+ARG CMAKEVERSION
+RUN yum update -y && yum install -y tar cmake  gcc gcc-c++  golang libstdc++-static glibc-static zstd
+ENV LDFLAGS=-s
+RUN go env -w GOPROXY=https://goproxy.cn,direct
