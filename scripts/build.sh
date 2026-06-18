@@ -13,7 +13,6 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 DISTS="${ROOT_DIR}/dists"
 SRCS="${ROOT_DIR}/srcs"
 
-mkdir -p "${DISTS}/${VERSION}" "${SRCS}"
 
 # ==========================================
 # 👇 用户自定义构建逻辑 (示例)
@@ -64,7 +63,7 @@ build()
     tar -xf ${UPSTREAM_REPO}-${VERSION}-linux-x86_64.tar.gz
     KIBANA_DIR=${UPSTREAM_REPO}-${VERSION} #读取tar包解压后的目录名称
 
-#    #下载对应的node二进制tar包，有一些版本上游不存在
+    #下载对应的node二进制tar包，有一些版本上游不存在
     wget https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-loong64.tar.gz
     NODE_DIR=node-v${NODE_VERSION}-linux-loong64 #读取tar包解压后的目录名称
     echo "******************** NODE_DIR = ${NODE_DIR}"
@@ -74,7 +73,9 @@ build()
     #替换X86 kibana 中的node目录
     rm -rf ${KIBANA_DIR}/node
     mv node ${KIBANA_DIR}/
-    sed -i 's|NODE="${DIR}/node/default/bin/node"|NODE="${DIR}/node/bin/node"|g' ${KIBANA_DIR}/bin/kibana #高版本中x86 node二进制的路径与ＬＡ的不一致，这里替换为ＬＡ的路径,kibana低版本路径是"${DIR}/node/bin/node",所以这里不用确认高低版本，直接默认替换即可
+    #高版本中x86 node二进制的路径与ＬＡ的不一致，这里替换为ＬＡ的路径,kibana低版本路径是"${DIR}/node/bin/node",所以这里不用确认高低版本，直接默认替换即可
+    sed -i 's|NODE="${DIR}/node/glibc-217/bin/node"|NODE="${DIR}/node/bin/node"|g'  ${KIBANA_DIR}/bin/kibana
+    sed -i 's|NODE="${DIR}/node/default/bin/node"|NODE="${DIR}/node/bin/node"|g' ${KIBANA_DIR}/bin/kibana 
 
     #高版本中已经不包含re2.node二进制，故这里先判断是否存在re2.node
     RE2_NODE=$(find "${KIBANA_DIR}" -name "re2.node")    
@@ -115,6 +116,8 @@ main()
     if [[ "${VERSION}" == v* ]]; then
         VERSION="${VERSION#v}"
     fi
+    #将创建目录放到这里是为了保证无论命令行输入的是./script/build.sh v9.2.0或者./script/build.sh 9.2.0　创建的目录都是一致的(如9.2.0)
+    mkdir -p "${DISTS}/${VERSION}" "${SRCS}"
 
     prepare
     build
